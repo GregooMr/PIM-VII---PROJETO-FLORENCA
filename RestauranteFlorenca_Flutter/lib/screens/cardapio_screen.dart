@@ -52,9 +52,12 @@ class _CardapioScreenState extends State<CardapioScreen> {
 
   Future<void> _alternarFavorito(String nome, double preco) async {
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+
     final usuarioId = prefs.getInt('usuario_id') ?? 0;
 
     if (usuarioId <= 0) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Faça login novamente para salvar favoritos.')),
       );

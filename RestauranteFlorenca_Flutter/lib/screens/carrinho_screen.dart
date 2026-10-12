@@ -61,9 +61,12 @@ class _CarrinhoScreenState extends State<CarrinhoScreen> {
     }
 
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+
     final usuarioId = prefs.getInt('usuario_id') ?? 0;
 
     if (usuarioId <= 0) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Sessão inválida. Faça login novamente.')),
       );
@@ -83,19 +86,30 @@ class _CarrinhoScreenState extends State<CarrinhoScreen> {
       final response = await ApiService.criarPedido(pedido);
 
       if (!mounted) return;
+      if (response.statusCode == 401 || response.statusCode == 403) return;
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         await prefs.remove('carrinho');
+        if (!mounted) return;
         _carregarCarrinhoLocal();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Pedido enviado para a cozinha! Buon Appetito!')),
         );
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao enviar pedido. HTTP ${response.statusCode}')),
+          SnackBar(
+            content: Text(
+              ApiService.errorMessage(
+                response,
+                fallback: 'Erro ao enviar pedido.',
+              ),
+            ),
+          ),
         );
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro de conexão: $e')),
       );

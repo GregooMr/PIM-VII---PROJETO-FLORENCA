@@ -1,0 +1,112 @@
+@model PedidosViewModel
+@{
+    ViewData["Title"] = "Cozinha";
+    var br = new System.Globalization.CultureInfo("pt-BR");
+
+    string Texto(string status) => status switch
+    {
+        "ENVIADO" => "Novo",
+        "EM_PREPARO" => "Em preparo",
+        "ENTREGUE" => "Entregue",
+        "CANCELADO" => "Cancelado",
+        _ => status
+    };
+}
+
+<h1>Painel da cozinha</h1>
+<p><a asp-action="Index">Atualizar pedidos</a></p>
+
+<h2>Novos (@Model.Novos.Count)</h2>
+@if (!Model.Novos.Any())
+{
+    <p class="vazio">Nenhum pedido novo.</p>
+}
+@foreach (var p in Model.Novos)
+{
+    <article class="pedido" aria-label="Pedido @p.Id">
+        <header>
+            <span>Pedido #@p.Id · @Model.Nomes.NomeDe(p.UsuarioId)</span>
+            <span>@p.CreatedAt.ToString("dd/MM HH:mm")</span>
+        </header>
+        <ul>
+            @foreach (var item in p.ObterItens())
+            {
+                <li>@item.Quantidade× @item.Nome</li>
+            }
+        </ul>
+        <div>Total: @p.ValorTotal.ToString("C2", br)</div>
+        <div class="acoes">
+            <form asp-action="AlterarStatus" method="post">
+                <input type="hidden" name="id" value="@p.Id" />
+                <input type="hidden" name="status" value="EM_PREPARO" />
+                <button type="submit">Iniciar preparo</button>
+            </form>
+            <form asp-action="AlterarStatus" method="post">
+                <input type="hidden" name="id" value="@p.Id" />
+                <input type="hidden" name="status" value="CANCELADO" />
+                <button type="submit" class="secundario">Cancelar pedido</button>
+            </form>
+        </div>
+    </article>
+}
+
+<h2>Em preparo (@Model.EmPreparo.Count)</h2>
+@if (!Model.EmPreparo.Any())
+{
+    <p class="vazio">Nenhum pedido em preparo.</p>
+}
+@foreach (var p in Model.EmPreparo)
+{
+    <article class="pedido" aria-label="Pedido @p.Id">
+        <header>
+            <span>Pedido #@p.Id · @Model.Nomes.NomeDe(p.UsuarioId)</span>
+            <span>@p.CreatedAt.ToString("dd/MM HH:mm")</span>
+        </header>
+        <ul>
+            @foreach (var item in p.ObterItens())
+            {
+                <li>@item.Quantidade× @item.Nome</li>
+            }
+        </ul>
+        <div class="acoes">
+            <form asp-action="AlterarStatus" method="post">
+                <input type="hidden" name="id" value="@p.Id" />
+                <input type="hidden" name="status" value="ENTREGUE" />
+                <button type="submit">Marcar como entregue</button>
+            </form>
+            <form asp-action="AlterarStatus" method="post">
+                <input type="hidden" name="id" value="@p.Id" />
+                <input type="hidden" name="status" value="CANCELADO" />
+                <button type="submit" class="secundario">Cancelar pedido</button>
+            </form>
+        </div>
+    </article>
+}
+
+<h2>Últimos finalizados</h2>
+@if (!Model.Finalizados.Any())
+{
+    <p class="vazio">Nenhum pedido finalizado ainda.</p>
+}
+else
+{
+    <div class="tabela-rolavel">
+        <table>
+            <caption class="vazio">Últimos 10 pedidos entregues ou cancelados</caption>
+            <thead>
+                <tr><th scope="col">Pedido</th><th scope="col">Cliente</th><th scope="col">Total</th><th scope="col">Situação</th></tr>
+            </thead>
+            <tbody>
+            @foreach (var p in Model.Finalizados)
+            {
+                <tr>
+                    <td>#@p.Id</td>
+                    <td>@Model.Nomes.NomeDe(p.UsuarioId)</td>
+                    <td>@p.ValorTotal.ToString("C2", br)</td>
+                    <td><span class="selo @(p.Status == "ENTREGUE" ? "ok" : "erro")">@Texto(p.Status)</span></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

@@ -18,8 +18,8 @@
     "Order": 0,
     "Parameters": [
       {
-        "Name": "reserva",
-        "Type": "FlorencaApi.Models.Agendamento",
+        "Name": "request",
+        "Type": "FlorencaApi.Models.AgendamentoRequest",
         "IsRequired": true
       }
     ],
@@ -92,8 +92,8 @@
     "Order": 0,
     "Parameters": [
       {
-        "Name": "pedido",
-        "Type": "FlorencaApi.Models.ComandaPedido",
+        "Name": "request",
+        "Type": "FlorencaApi.Models.PedidoRequest",
         "IsRequired": true
       }
     ],
@@ -154,6 +154,16 @@
   },
   {
     "ContainingType": "FlorencaApi.Controllers.CuponsController",
+    "Method": "ObterTodos",
+    "RelativePath": "api/Cupons",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FlorencaApi.Controllers.CuponsController",
     "Method": "Criar",
     "RelativePath": "api/Cupons",
     "HttpMethod": "POST",
@@ -161,8 +171,8 @@
     "Order": 0,
     "Parameters": [
       {
-        "Name": "cupom",
-        "Type": "FlorencaApi.Models.Cupom",
+        "Name": "request",
+        "Type": "FlorencaApi.Models.CupomRequest",
         "IsRequired": true
       }
     ],
@@ -241,8 +251,8 @@
     "Order": 0,
     "Parameters": [
       {
-        "Name": "favorito",
-        "Type": "FlorencaApi.Models.Favorito",
+        "Name": "request",
+        "Type": "FlorencaApi.Models.FavoritoRequest",
         "IsRequired": true
       }
     ],
@@ -299,8 +309,8 @@
     "Order": 0,
     "Parameters": [
       {
-        "Name": "entrada",
-        "Type": "FlorencaApi.Models.FilaVirtual",
+        "Name": "request",
+        "Type": "FlorencaApi.Models.FilaRequest",
         "IsRequired": true
       }
     ],
@@ -356,6 +366,16 @@
   },
   {
     "ContainingType": "FlorencaApi.Controllers.UsuariosController",
+    "Method": "ObterTodos",
+    "RelativePath": "api/Usuarios",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "FlorencaApi.Controllers.UsuariosController",
     "Method": "ObterPorId",
     "RelativePath": "api/Usuarios/{id}",
     "HttpMethod": "GET",
@@ -379,8 +399,8 @@
     "Order": 0,
     "Parameters": [
       {
-        "Name": "novoUser",
-        "Type": "FlorencaApi.Models.Usuario",
+        "Name": "request",
+        "Type": "FlorencaApi.Models.CadastroRequest",
         "IsRequired": true
       }
     ],

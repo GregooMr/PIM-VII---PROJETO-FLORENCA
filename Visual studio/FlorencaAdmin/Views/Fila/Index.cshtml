@@ -1,0 +1,80 @@
+@model FilaViewModel
+@{
+    ViewData["Title"] = "Fila virtual";
+}
+
+<h1>Fila de espera virtual</h1>
+<p><a asp-action="Index">Atualizar fila</a></p>
+
+<h2>Aguardando (@Model.Aguardando.Count)</h2>
+@if (!Model.Aguardando.Any())
+{
+    <p class="vazio">Ninguém aguardando no momento.</p>
+}
+else
+{
+    <div class="tabela-rolavel">
+        <table>
+            <caption class="vazio">Ordem de chegada: o primeiro da lista deve ser chamado primeiro</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Posição</th>
+                    <th scope="col">Cliente</th>
+                    <th scope="col">Pessoas</th>
+                    <th scope="col">Entrou às</th>
+                    <th scope="col">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+            @{ var pos = 1; }
+            @foreach (var f in Model.Aguardando)
+            {
+                <tr>
+                    <td>@(pos++)º</td>
+                    <td>@Model.Nomes.NomeDe(f.UsuarioId)</td>
+                    <td>@f.QtdPessoas</td>
+                    <td>@f.CreatedAt.ToString("HH:mm")</td>
+                    <td>
+                        <div class="acoes">
+                            <form asp-action="Chamar" method="post">
+                                <input type="hidden" name="id" value="@f.Id" />
+                                <button type="submit">Chamar: mesa pronta</button>
+                            </form>
+                            <form asp-action="Cancelar" method="post">
+                                <input type="hidden" name="id" value="@f.Id" />
+                                <button type="submit" class="secundario">Remover da fila</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+
+<h2>Mesa pronta (@Model.MesaPronta.Count)</h2>
+@if (!Model.MesaPronta.Any())
+{
+    <p class="vazio">Nenhum cliente com mesa pronta.</p>
+}
+else
+{
+    <div class="tabela-rolavel">
+        <table>
+            <thead>
+                <tr><th scope="col">Cliente</th><th scope="col">Pessoas</th><th scope="col">Situação</th></tr>
+            </thead>
+            <tbody>
+            @foreach (var f in Model.MesaPronta)
+            {
+                <tr>
+                    <td>@Model.Nomes.NomeDe(f.UsuarioId)</td>
+                    <td>@f.QtdPessoas</td>
+                    <td><span class="selo ok">Mesa pronta</span></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

@@ -19,9 +19,27 @@ class _CadastroScreenState extends State<CadastroScreen> {
     final usuario = _usuarioController.text.trim();
     final senha = _senhaController.text;
 
-    if (usuario.isEmpty || senha.isEmpty) {
+    if (usuario.length < 2 || usuario.length > 100) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Preencha todos os campos!')),
+        const SnackBar(
+          content: Text('O nome deve ter entre 2 e 100 caracteres.'),
+        ),
+      );
+      return;
+    }
+    if (usuario.length < 3 || usuario.length > 50) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('O usuário deve ter entre 3 e 50 caracteres.'),
+        ),
+      );
+      return;
+    }
+    if (senha.length < 4 || senha.length > 100) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('A senha deve ter entre 4 e 100 caracteres.'),
+        ),
       );
       return;
     }
@@ -46,16 +64,20 @@ class _CadastroScreenState extends State<CadastroScreen> {
           const SnackBar(content: Text('Cadastro realizado com sucesso! Faça login.')),
         );
         Navigator.pop(context);
-      } else if (response.statusCode == 409) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Este nome de usuário já está cadastrado.')),
-        );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao cadastrar. HTTP ${response.statusCode}')),
+          SnackBar(
+            content: Text(
+              ApiService.errorMessage(
+                response,
+                fallback: 'Erro ao cadastrar.',
+              ),
+            ),
+          ),
         );
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro de conexão: $e')),
       );
@@ -81,7 +103,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
           ),
           Positioned.fill(
             child: Container(
-              color: Colors.black.withOpacity(0.55),
+              color: Colors.black.withValues(alpha: 0.55),
             ),
           ),
           Center(
@@ -89,7 +111,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
               padding: const EdgeInsets.all(24.0),
               child: Card(
                 elevation: 8,
-                color: Colors.white.withOpacity(0.95),
+                color: Colors.white.withValues(alpha: 0.95),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                 child: Padding(
                   padding: const EdgeInsets.all(24.0),

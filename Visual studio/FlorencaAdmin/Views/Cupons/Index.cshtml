@@ -1,0 +1,95 @@
+@model CuponsViewModel
+@{
+    ViewData["Title"] = "Cupons";
+}
+
+<h1>Caixa: cupons promocionais</h1>
+
+<section aria-labelledby="validar-titulo">
+    <h2 id="validar-titulo">Validar cupom</h2>
+    <form asp-action="Validar" method="post" class="linha-form">
+        <div class="campo" style="margin-bottom:0">
+            <label for="codigo">Código do cupom</label>
+            <input id="codigo" name="codigo" value="@Model.CodigoBusca" autocomplete="off" />
+        </div>
+        <button type="submit">Validar</button>
+    </form>
+
+    @if (!string.IsNullOrEmpty(Model.ErroValidacao))
+    {
+        <div class="alerta erro" role="alert" style="margin-top:1rem">@Model.ErroValidacao</div>
+    }
+
+    @if (Model.CupomValidado != null)
+    {
+        <div class="alerta ok" role="status" style="margin-top:1rem">
+            <div>Cupom válido: <strong>@Model.CupomValidado.NomePromocao</strong></div>
+            <div>Cliente: @Model.Nomes.NomeDe(Model.CupomValidado.UsuarioId) · Código @Model.CupomValidado.CodigoCupom</div>
+            <form asp-action="DarBaixa" method="post" style="margin-top:.5rem">
+                <input type="hidden" name="id" value="@Model.CupomValidado.Id" />
+                <button type="submit">Dar baixa no cupom</button>
+            </form>
+        </div>
+    }
+</section>
+
+<section aria-labelledby="emitir-titulo">
+    <h2 id="emitir-titulo">Emitir novo cupom</h2>
+    <form asp-action="Emitir" method="post" class="linha-form">
+        <div class="campo" style="margin-bottom:0">
+            <label for="UsuarioId">Cliente</label>
+            <select id="UsuarioId" name="UsuarioId" required>
+                <option value="">Selecione…</option>
+                @foreach (var c in Model.Clientes)
+                {
+                    <option value="@c.Id">@c.Nome (@c.Usuario)</option>
+                }
+            </select>
+        </div>
+        <div class="campo" style="margin-bottom:0">
+            <label for="NomePromocao">Promoção</label>
+            <input id="NomePromocao" name="NomePromocao" maxlength="100" required />
+        </div>
+        <div class="campo" style="margin-bottom:0">
+            <label for="CodigoCupom">Código (único)</label>
+            <input id="CodigoCupom" name="CodigoCupom" maxlength="20" required />
+        </div>
+        <button type="submit">Emitir cupom</button>
+    </form>
+</section>
+
+<section aria-labelledby="lista-titulo">
+    <h2 id="lista-titulo">Todos os cupons</h2>
+    @if (!Model.Cupons.Any())
+    {
+        <p class="vazio">Nenhum cupom emitido.</p>
+    }
+    else
+    {
+        <div class="tabela-rolavel">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">Código</th>
+                        <th scope="col">Promoção</th>
+                        <th scope="col">Cliente</th>
+                        <th scope="col">Emitido em</th>
+                        <th scope="col">Situação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var c in Model.Cupons)
+                {
+                    <tr>
+                        <td>@c.CodigoCupom</td>
+                        <td>@c.NomePromocao</td>
+                        <td>@Model.Nomes.NomeDe(c.UsuarioId)</td>
+                        <td>@c.CreatedAt.ToString("dd/MM/yyyy")</td>
+                        <td><span class="selo @(c.IsUsado ? "erro" : "ok")">@(c.IsUsado ? "Usado" : "Disponível")</span></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

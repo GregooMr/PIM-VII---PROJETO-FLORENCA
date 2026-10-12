@@ -29,28 +29,33 @@ class _FuncPromocaoScreenState extends State<FuncPromocaoScreen> {
       final resValidar = await ApiService.validarCupomFuncionario(codigo);
 
       if (!mounted) return;
+      if (resValidar.statusCode == 401 || resValidar.statusCode == 403) return;
 
       if (resValidar.statusCode == 200) {
         final body = jsonDecode(resValidar.body);
         final cupomId = body['id'];
 
         final resUsar = await ApiService.usarCupom(cupomId);
+        if (!mounted) return;
+        if (resUsar.statusCode == 401 || resUsar.statusCode == 403) return;
+
         if (resUsar.statusCode == 200) {
           _codigoController.clear();
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('✅ Cupom validado e marcado como utilizado!')),
           );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(ApiService.errorMessage(resUsar))),
+          );
         }
-      } else if (resValidar.statusCode == 400) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Este cupom já foi utilizado.')),
-        );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cupom não encontrado.')),
+          SnackBar(content: Text(ApiService.errorMessage(resValidar))),
         );
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro de conexão: $e')),
       );

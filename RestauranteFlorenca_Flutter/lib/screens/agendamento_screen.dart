@@ -15,7 +15,7 @@ class _AgendamentoScreenState extends State<AgendamentoScreen> {
   final _qtdController = TextEditingController(text: '2');
   final _nomePcdController = TextEditingController();
   bool _isPcd = false;
-  String _tipoPcd = 'Cadeirante / Mobilidade Reduzida';
+  String? _tipoPcd;
   DateTime _dataSelecionada = DateTime.now().add(const Duration(hours: 2));
   bool _isLoading = false;
 
@@ -31,9 +31,12 @@ class _AgendamentoScreenState extends State<AgendamentoScreen> {
 
   Future<void> _confirmarReserva() async {
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+
     final usuarioId = prefs.getInt('usuario_id') ?? 0;
 
     if (usuarioId <= 0) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Sessão inválida. Faça login novamente.')),
       );
@@ -41,18 +44,29 @@ class _AgendamentoScreenState extends State<AgendamentoScreen> {
     }
 
     final qtd = int.tryParse(_qtdController.text.trim()) ?? 0;
-    if (qtd <= 0) {
+    if (qtd < 1 || qtd > 50) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Informe a quantidade de pessoas.')),
+        const SnackBar(
+          content: Text('Informe uma quantidade de pessoas entre 1 e 50.'),
+        ),
       );
       return;
     }
 
-    if (_isPcd && _nomePcdController.text.trim().isEmpty) {
+    if (_isPcd && (_tipoPcd == null || _tipoPcd!.trim().isEmpty)) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content:
-                Text('Informe o nome do convidado com necessidade especial.')),
+          content: Text('Selecione o tipo de necessidade especial.'),
+        ),
+      );
+      return;
+    }
+
+    if (!_dataSelecionada.isAfter(DateTime.now())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('A data e o horário devem ser futuros.')),
       );
       return;
     }
@@ -67,12 +81,13 @@ class _AgendamentoScreenState extends State<AgendamentoScreen> {
         qtdPessoas: qtd,
         isPcd: _isPcd,
         nomePcd: _isPcd ? _nomePcdController.text.trim() : '',
-        tipoPcd: _isPcd ? _tipoPcd : '',
+        tipoPcd: _isPcd ? _tipoPcd! : '',
       );
 
       final response = await ApiService.criarAgendamento(reserva);
 
       if (!mounted) return;
+      if (response.statusCode == 401 || response.statusCode == 403) return;
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -83,11 +98,17 @@ class _AgendamentoScreenState extends State<AgendamentoScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content:
-                  Text('Erro ao criar reserva. HTTP ${response.statusCode}')),
+            content: Text(
+              ApiService.errorMessage(
+                response,
+                fallback: 'Erro ao criar reserva.',
+              ),
+            ),
+          ),
         );
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro de conexão: $e')),
       );
@@ -138,7 +159,8 @@ class _AgendamentoScreenState extends State<AgendamentoScreen> {
                   firstDate: DateTime.now(),
                   lastDate: DateTime.now().add(const Duration(days: 90)),
                 );
-                if (date != null && mounted) {
+                if (date != null) {
+                  if (!context.mounted) return;
                   final time = await showTimePicker(
                     context: context,
                     initialTime: TimeOfDay.fromDateTime(_dataSelecionada),
@@ -180,7 +202,7 @@ class _AgendamentoScreenState extends State<AgendamentoScreen> {
                         value: e,
                         child: Text(e, style: const TextStyle(fontSize: 13))))
                     .toList(),
-                onChanged: (val) => setState(() => _tipoPcd = val!),
+                onChanged: (val) => setState(() => _tipoPcd = val),
               ),
             ],
             const SizedBox(height: 24),

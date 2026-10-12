@@ -1,8 +1,8 @@
 {
   "openapi": "3.0.1",
   "info": {
-    "title": "FlorencaApi",
-    "version": "1.0"
+    "title": "API Restaurante Florença",
+    "version": "v1"
   },
   "paths": {
     "/api/Agendamentos": {
@@ -24,17 +24,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Agendamento"
+                "$ref": "#/components/schemas/AgendamentoRequest"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/Agendamento"
+                "$ref": "#/components/schemas/AgendamentoRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/Agendamento"
+                "$ref": "#/components/schemas/AgendamentoRequest"
               }
             }
           }
@@ -157,17 +157,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ComandaPedido"
+                "$ref": "#/components/schemas/PedidoRequest"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/ComandaPedido"
+                "$ref": "#/components/schemas/PedidoRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/ComandaPedido"
+                "$ref": "#/components/schemas/PedidoRequest"
               }
             }
           }
@@ -268,6 +268,16 @@
       }
     },
     "/api/Cupons": {
+      "get": {
+        "tags": [
+          "Cupons"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
       "post": {
         "tags": [
           "Cupons"
@@ -276,17 +286,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Cupom"
+                "$ref": "#/components/schemas/CupomRequest"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/Cupom"
+                "$ref": "#/components/schemas/CupomRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/Cupom"
+                "$ref": "#/components/schemas/CupomRequest"
               }
             }
           }
@@ -415,17 +425,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Favorito"
+                "$ref": "#/components/schemas/FavoritoRequest"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/Favorito"
+                "$ref": "#/components/schemas/FavoritoRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/Favorito"
+                "$ref": "#/components/schemas/FavoritoRequest"
               }
             }
           }
@@ -479,17 +489,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/FilaVirtual"
+                "$ref": "#/components/schemas/FilaRequest"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/FilaVirtual"
+                "$ref": "#/components/schemas/FilaRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/FilaVirtual"
+                "$ref": "#/components/schemas/FilaRequest"
               }
             }
           }
@@ -610,21 +620,33 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Usuario"
+                "$ref": "#/components/schemas/CadastroRequest"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/Usuario"
+                "$ref": "#/components/schemas/CadastroRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/Usuario"
+                "$ref": "#/components/schemas/CadastroRequest"
               }
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Usuarios": {
+      "get": {
+        "tags": [
+          "Usuarios"
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -658,13 +680,9 @@
   },
   "components": {
     "schemas": {
-      "Agendamento": {
+      "AgendamentoRequest": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
           "usuarioId": {
             "type": "integer",
             "format": "int32"
@@ -674,6 +692,8 @@
             "format": "date-time"
           },
           "qtdPessoas": {
+            "maximum": 50,
+            "minimum": 1,
             "type": "integer",
             "format": "int32"
           },
@@ -681,20 +701,16 @@
             "type": "boolean"
           },
           "nomePcd": {
+            "maxLength": 100,
+            "minLength": 0,
             "type": "string",
             "nullable": true
           },
           "tipoPcd": {
+            "maxLength": 100,
+            "minLength": 0,
             "type": "string",
             "nullable": true
-          },
-          "status": {
-            "type": "string",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
           }
         },
         "additionalProperties": false
@@ -709,113 +725,94 @@
         },
         "additionalProperties": false
       },
-      "ComandaPedido": {
+      "CadastroRequest": {
+        "required": [
+          "nome",
+          "senha",
+          "usuario"
+        ],
         "type": "object",
         "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
+          "nome": {
+            "maxLength": 100,
+            "minLength": 2,
+            "type": "string"
           },
-          "usuarioId": {
-            "type": "integer",
-            "format": "int32"
+          "usuario": {
+            "maxLength": 50,
+            "minLength": 3,
+            "type": "string"
           },
-          "itensJson": {
-            "type": "string",
-            "nullable": true
-          },
-          "valorTotal": {
-            "type": "number",
-            "format": "double"
-          },
-          "status": {
-            "type": "string",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
+          "senha": {
+            "maxLength": 100,
+            "minLength": 4,
+            "type": "string"
           }
         },
         "additionalProperties": false
       },
-      "Cupom": {
+      "CupomRequest": {
+        "required": [
+          "codigoCupom",
+          "nomePromocao"
+        ],
         "type": "object",
         "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
           "usuarioId": {
+            "maximum": 2147483647,
+            "minimum": 1,
             "type": "integer",
             "format": "int32"
           },
           "nomePromocao": {
-            "type": "string",
-            "nullable": true
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
           },
           "codigoCupom": {
-            "type": "string",
-            "nullable": true
-          },
-          "isUsado": {
-            "type": "boolean"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string"
           }
         },
         "additionalProperties": false
       },
-      "Favorito": {
+      "FavoritoRequest": {
+        "required": [
+          "pratoNome"
+        ],
         "type": "object",
         "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
           "usuarioId": {
             "type": "integer",
             "format": "int32"
           },
           "pratoNome": {
-            "type": "string",
-            "nullable": true
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
           },
           "preco": {
+            "maximum": 100000,
+            "minimum": 0,
             "type": "number",
             "format": "double"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
           }
         },
         "additionalProperties": false
       },
-      "FilaVirtual": {
+      "FilaRequest": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
           "usuarioId": {
             "type": "integer",
             "format": "int32"
           },
           "qtdPessoas": {
+            "maximum": 50,
+            "minimum": 1,
             "type": "integer",
             "format": "int32"
-          },
-          "status": {
-            "type": "string",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
           }
         },
         "additionalProperties": false
@@ -834,38 +831,25 @@
         },
         "additionalProperties": false
       },
-      "Usuario": {
+      "PedidoRequest": {
         "required": [
-          "loginUsuario",
-          "nome",
-          "senha",
-          "tipoUsuario"
+          "itensJson"
         ],
         "type": "object",
         "properties": {
-          "id": {
+          "usuarioId": {
             "type": "integer",
             "format": "int32"
           },
-          "nome": {
+          "itensJson": {
             "minLength": 1,
             "type": "string"
           },
-          "loginUsuario": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "senha": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "tipoUsuario": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
+          "valorTotal": {
+            "maximum": 100000,
+            "minimum": 0,
+            "type": "number",
+            "format": "double"
           }
         },
         "additionalProperties": false
@@ -894,6 +878,19 @@
         },
         "additionalProperties": false
       }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "description": "Informe apenas o token JWT obtido em /api/usuarios/login.",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
     }
-  }
+  },
+  "security": [
+    {
+      "Bearer": [ ]
+    }
+  ]
 }

@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FlorencaApi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f9b5401ab18347ae2beaabe04ad8288e75fe536f")]
 [assembly: System.Reflection.AssemblyProductAttribute("FlorencaApi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FlorencaApi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,11 +1,14 @@
 using FlorencaApi.Data;
 using FlorencaApi.Models;
+using FlorencaApi.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace FlorencaApi.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class FavoritosController : ControllerBase
 {
@@ -20,6 +23,9 @@ public class FavoritosController : ControllerBase
     [HttpGet("usuario/{usuarioId:int}")]
     public async Task<IActionResult> ObterPorUsuario(int usuarioId)
     {
+        if (!User.PodeAcessar(usuarioId))
+            return Forbid();
+
         var favoritos = await _context.Favoritos
             .AsNoTracking()
             .Where(f => f.UsuarioId == usuarioId)
@@ -31,20 +37,25 @@ public class FavoritosController : ControllerBase
 
     // POST: api/favoritos
     [HttpPost]
-    public async Task<IActionResult> Adicionar([FromBody] Favorito favorito)
+    public async Task<IActionResult> Adicionar([FromBody] FavoritoRequest request)
     {
-        if (favorito.UsuarioId <= 0 ||
-            string.IsNullOrWhiteSpace(favorito.PratoNome))
-        {
-            return BadRequest(new { mensagem = "Usuário e prato são obrigatórios." });
-        }
+        var usuarioId = User.EhFuncionario() && request.UsuarioId > 0
+            ? request.UsuarioId
+            : User.ObterUsuarioId();
 
         var existe = await _context.Favoritos.AnyAsync(f =>
-            f.UsuarioId == favorito.UsuarioId &&
-            f.PratoNome == favorito.PratoNome);
+            f.UsuarioId == usuarioId &&
+            f.PratoNome == request.PratoNome);
 
         if (existe)
             return Conflict(new { mensagem = "Este prato já está nos favoritos." });
+
+        var favorito = new Favorito
+        {
+            UsuarioId = usuarioId,
+            PratoNome = request.PratoNome.Trim(),
+            Preco = request.Preco
+        };
 
         _context.Favoritos.Add(favorito);
         await _context.SaveChangesAsync();
@@ -63,6 +74,9 @@ public class FavoritosController : ControllerBase
 
         if (favorito == null)
             return NotFound(new { mensagem = "Favorito não encontrado." });
+
+        if (!User.PodeAcessar(favorito.UsuarioId))
+            return Forbid();
 
         _context.Favoritos.Remove(favorito);
         await _context.SaveChangesAsync();

@@ -1,5 +1,8 @@
 using FlorencaApi.Data;
 using FlorencaApi.Models;
+using FlorencaApi.Security;
+using FlorencaApi.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,13 +13,16 @@ namespace FlorencaApi.Controllers;
 public class UsuariosController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly TokenService _tokenService;
 
-    public UsuariosController(AppDbContext context)
+    public UsuariosController(AppDbContext context, TokenService tokenService)
     {
         _context = context;
+        _tokenService = tokenService;
     }
 
-    // POST: api/usuarios/login
+    // POST: api/usuarios/login  (público)
+    [AllowAnonymous]
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
@@ -26,47 +32,54 @@ public class UsuariosController : ControllerBase
             return BadRequest(new { mensagem = "Usuário e senha são obrigatórios." });
         }
 
+        // 1) Busca pelo login (consulta parametrizada pelo EF Core)
         var user = await _context.Usuarios
             .AsNoTracking()
-            .FirstOrDefaultAsync(u =>
-                u.LoginUsuario == request.Usuario &&
-                u.Senha == request.Senha);
+            .FirstOrDefaultAsync(u => u.LoginUsuario == request.Usuario);
 
-        if (user == null)
+        // 2) Compara a senha digitada com o hash BCrypt armazenado.
+        //    A mesma mensagem é usada para usuário inexistente e senha errada,
+        //    evitando revelar quais logins existem.
+        if (user == null || !BCrypt.Net.BCrypt.Verify(request.Senha, user.Senha))
         {
             return Unauthorized(new { mensagem = "Usuário ou senha incorretos." });
         }
 
+        // 3) Gera o JWT com id, nome e perfil (role)
         return Ok(new UsuarioResponse
         {
             Id = user.Id,
             Nome = user.Nome,
             Usuario = user.LoginUsuario,
-            TipoUsuario = user.TipoUsuario
+            TipoUsuario = user.TipoUsuario,
+            Token = _tokenService.Gerar(user)
         });
     }
 
-    // POST: api/usuarios/cadastrar
+    // POST: api/usuarios/cadastrar  (público)
+    [AllowAnonymous]
     [HttpPost("cadastrar")]
-    public async Task<IActionResult> Cadastrar([FromBody] Usuario novoUser)
+    public async Task<IActionResult> Cadastrar([FromBody] CadastroRequest request)
     {
-        if (string.IsNullOrWhiteSpace(novoUser.Nome) ||
-            string.IsNullOrWhiteSpace(novoUser.LoginUsuario) ||
-            string.IsNullOrWhiteSpace(novoUser.Senha))
-        {
-            return BadRequest(new { mensagem = "Nome, usuário e senha são obrigatórios." });
-        }
+        var login = request.Usuario.Trim();
 
         var usuarioExiste = await _context.Usuarios
-            .AnyAsync(u => u.LoginUsuario == novoUser.LoginUsuario);
+            .AnyAsync(u => u.LoginUsuario == login);
 
         if (usuarioExiste)
         {
             return Conflict(new { mensagem = "Este nome de usuário já está cadastrado." });
         }
 
-        // Usuários criados pelo aplicativo sempre entram como CLIENTE.
-        novoUser.TipoUsuario = "CLIENTE";
+        var novoUser = new Usuario
+        {
+            Nome = request.Nome.Trim(),
+            LoginUsuario = login,
+            Senha = BCrypt.Net.BCrypt.HashPassword(request.Senha),
+            // Cadastro público SEMPRE cria CLIENTE. Contas de funcionário
+            // só podem ser criadas por quem administra o banco de dados.
+            TipoUsuario = ClaimsExtensions.RoleCliente
+        };
 
         _context.Usuarios.Add(novoUser);
         await _context.SaveChangesAsync();
@@ -83,10 +96,34 @@ public class UsuariosController : ControllerBase
             });
     }
 
-    // GET: api/usuarios/1
+    // GET: api/usuarios  (somente FUNCIONARIO) - usado pelo painel web
+    [Authorize(Roles = ClaimsExtensions.RoleFuncionario)]
+    [HttpGet]
+    public async Task<IActionResult> ObterTodos()
+    {
+        var lista = await _context.Usuarios
+            .AsNoTracking()
+            .OrderBy(u => u.Nome)
+            .Select(u => new UsuarioResponse
+            {
+                Id = u.Id,
+                Nome = u.Nome,
+                Usuario = u.LoginUsuario,
+                TipoUsuario = u.TipoUsuario
+            })
+            .ToListAsync();
+
+        return Ok(lista);
+    }
+
+    // GET: api/usuarios/1  (o próprio usuário ou FUNCIONARIO)
+    [Authorize]
     [HttpGet("{id:int}")]
     public async Task<IActionResult> ObterPorId(int id)
     {
+        if (!User.PodeAcessar(id))
+            return Forbid();
+
         var user = await _context.Usuarios
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Id == id);

@@ -1,0 +1,88 @@
+@model AgendamentosViewModel
+@{
+    ViewData["Title"] = "Reservas";
+
+    string Texto(string status) => status switch
+    {
+        "CONFIRMADO" => "Confirmada",
+        "CANCELADO" => "Cancelada",
+        "CONCLUIDO" => "Concluída",
+        _ => status
+    };
+
+    string Classe(string status) => status switch
+    {
+        "CONFIRMADO" => "aviso",
+        "CONCLUIDO" => "ok",
+        _ => "erro"
+    };
+}
+
+<h1>Reservas</h1>
+
+<form method="get" asp-action="Index" class="linha-form" style="margin-bottom:1rem">
+    <label style="display:flex;gap:.5rem;align-items:center;font-weight:400">
+        <input type="checkbox" name="somentePcd" value="true" checked="@Model.SomentePcd" style="width:auto" />
+        Somente reservas acessíveis (PCD)
+    </label>
+    <label style="display:flex;gap:.5rem;align-items:center;font-weight:400">
+        <input type="checkbox" name="incluirPassadas" value="true" checked="@(!Model.SomenteFuturas)" style="width:auto" />
+        Incluir reservas de dias anteriores
+    </label>
+    <button type="submit" class="secundario">Aplicar filtros</button>
+</form>
+
+@if (!Model.Reservas.Any())
+{
+    <p class="vazio">Nenhuma reserva encontrada para os filtros escolhidos.</p>
+}
+else
+{
+    <div class="tabela-rolavel">
+        <table>
+            <caption class="vazio">@Model.Reservas.Count reserva(s) encontrada(s)</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Data e hora</th>
+                    <th scope="col">Cliente</th>
+                    <th scope="col">Pessoas</th>
+                    <th scope="col">Acessibilidade</th>
+                    <th scope="col">Situação</th>
+                    <th scope="col">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var r in Model.Reservas)
+            {
+                <tr>
+                    <td>@r.DataHora.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@Model.Nomes.NomeDe(r.UsuarioId)</td>
+                    <td>@r.QtdPessoas</td>
+                    <td>
+                        @if (r.IsPcd)
+                        {
+                            <span class="selo pcd">Mesa acessível</span>
+                            <div>@r.NomePcd</div>
+                            <div>@r.TipoPcd</div>
+                        }
+                        else
+                        {
+                            <span class="vazio">Não informada</span>
+                        }
+                    </td>
+                    <td><span class="selo @Classe(r.Status)">@Texto(r.Status)</span></td>
+                    <td>
+                        @if (r.Status == "CONFIRMADO")
+                        {
+                            <form asp-action="Cancelar" method="post">
+                                <input type="hidden" name="id" value="@r.Id" />
+                                <button type="submit" class="secundario">Cancelar reserva</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

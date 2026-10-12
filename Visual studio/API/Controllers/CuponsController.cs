@@ -1,11 +1,14 @@
 using FlorencaApi.Data;
 using FlorencaApi.Models;
+using FlorencaApi.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace FlorencaApi.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class CuponsController : ControllerBase
 {
@@ -20,6 +23,9 @@ public class CuponsController : ControllerBase
     [HttpGet("usuario/{usuarioId:int}")]
     public async Task<IActionResult> ObterPorUsuario(int usuarioId)
     {
+        if (!User.PodeAcessar(usuarioId))
+            return Forbid();
+
         var cupons = await _context.Cupons
             .AsNoTracking()
             .Where(c => c.UsuarioId == usuarioId)
@@ -29,30 +35,46 @@ public class CuponsController : ControllerBase
         return Ok(cupons);
     }
 
-    // POST: api/cupons
-    [HttpPost]
-    public async Task<IActionResult> Criar([FromBody] Cupom cupom)
+    // GET: api/cupons  (somente FUNCIONARIO - painel web)
+    [Authorize(Roles = ClaimsExtensions.RoleFuncionario)]
+    [HttpGet]
+    public async Task<IActionResult> ObterTodos()
     {
-        if (cupom.UsuarioId <= 0 ||
-            string.IsNullOrWhiteSpace(cupom.NomePromocao) ||
-            string.IsNullOrWhiteSpace(cupom.CodigoCupom))
-        {
-            return BadRequest(new { mensagem = "Usuário, promoção e código são obrigatórios." });
-        }
+        var cupons = await _context.Cupons
+            .AsNoTracking()
+            .OrderByDescending(c => c.CreatedAt)
+            .ToListAsync();
+
+        return Ok(cupons);
+    }
+
+    // POST: api/cupons  (somente FUNCIONARIO emite cupons)
+    [Authorize(Roles = ClaimsExtensions.RoleFuncionario)]
+    [HttpPost]
+    public async Task<IActionResult> Criar([FromBody] CupomRequest request)
+    {
+        var codigo = request.CodigoCupom.Trim().ToUpperInvariant();
 
         var usuarioExiste = await _context.Usuarios
-            .AnyAsync(u => u.Id == cupom.UsuarioId);
+            .AnyAsync(u => u.Id == request.UsuarioId);
 
         if (!usuarioExiste)
             return NotFound(new { mensagem = "Usuário não encontrado." });
 
         var codigoExiste = await _context.Cupons
-            .AnyAsync(c => c.CodigoCupom == cupom.CodigoCupom);
+            .AnyAsync(c => c.CodigoCupom == codigo);
 
         if (codigoExiste)
             return Conflict(new { mensagem = "Código de cupom já existente." });
 
-        cupom.IsUsado = false;
+        var cupom = new Cupom
+        {
+            UsuarioId = request.UsuarioId,
+            NomePromocao = request.NomePromocao.Trim(),
+            CodigoCupom = codigo,
+            IsUsado = false
+        };
+
         _context.Cupons.Add(cupom);
         await _context.SaveChangesAsync();
 
@@ -62,17 +84,24 @@ public class CuponsController : ControllerBase
             cupom);
     }
 
-    // POST: api/cupons/validar
+    // POST: api/cupons/validar  (o dono do cupom ou FUNCIONARIO)
     [HttpPost("validar")]
     public async Task<IActionResult> Validar([FromBody] ValidarCupomRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.CodigoCupom))
             return BadRequest(new { mensagem = "Código do cupom é obrigatório." });
 
+        // Cliente só valida cupom próprio, mesmo que envie outro UsuarioId no corpo.
+        var usuarioId = User.EhFuncionario() && request.UsuarioId > 0
+            ? request.UsuarioId
+            : User.ObterUsuarioId();
+
+        var codigo = request.CodigoCupom.Trim().ToUpperInvariant();
+
         var cupom = await _context.Cupons
             .FirstOrDefaultAsync(c =>
-                c.UsuarioId == request.UsuarioId &&
-                c.CodigoCupom == request.CodigoCupom);
+                c.UsuarioId == usuarioId &&
+                c.CodigoCupom == codigo);
 
         if (cupom == null)
             return NotFound(new { mensagem = "Cupom não encontrado." });
@@ -83,15 +112,18 @@ public class CuponsController : ControllerBase
         return Ok(cupom);
     }
 
-    // POST: api/cupons/validar-funcionario
+    // POST: api/cupons/validar-funcionario  (somente FUNCIONARIO - caixa)
+    [Authorize(Roles = ClaimsExtensions.RoleFuncionario)]
     [HttpPost("validar-funcionario")]
     public async Task<IActionResult> ValidarFuncionario([FromBody] ValidarCodigoRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.CodigoCupom))
             return BadRequest(new { mensagem = "Código do cupom é obrigatório." });
 
+        var codigo = request.CodigoCupom.Trim().ToUpperInvariant();
+
         var cupom = await _context.Cupons
-            .FirstOrDefaultAsync(c => c.CodigoCupom == request.CodigoCupom);
+            .FirstOrDefaultAsync(c => c.CodigoCupom == codigo);
 
         if (cupom == null)
             return NotFound(new { mensagem = "Cupom não encontrado." });
@@ -102,7 +134,8 @@ public class CuponsController : ControllerBase
         return Ok(cupom);
     }
 
-    // PUT: api/cupons/1/usar
+    // PUT: api/cupons/1/usar  (somente FUNCIONARIO dá baixa no caixa)
+    [Authorize(Roles = ClaimsExtensions.RoleFuncionario)]
     [HttpPut("{id:int}/usar")]
     public async Task<IActionResult> Usar(int id)
     {

@@ -5,6 +5,7 @@ import 'func_fila_screen.dart';
 import 'func_pedido_screen.dart';
 import 'func_promocao_screen.dart';
 import 'login_screen.dart';
+import '../services/api_service.dart';
 
 class HomeFuncionarioScreen extends StatelessWidget {
   const HomeFuncionarioScreen({super.key});
@@ -17,10 +18,13 @@ class HomeFuncionarioScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () {
-              Navigator.pushReplacement(
+            onPressed: () async {
+              await ApiService.logout();
+              if (!context.mounted) return;
+              Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (context) => const LoginScreen()),
+                (route) => false,
               );
             },
           ),

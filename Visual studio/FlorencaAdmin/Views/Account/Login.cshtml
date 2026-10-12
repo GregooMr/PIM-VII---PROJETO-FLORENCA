@@ -1,0 +1,31 @@
+@model LoginViewModel
+@{
+    ViewData["Title"] = "Entrar";
+}
+<h1>Entrar no painel</h1>
+<p>Acesso exclusivo para a equipe do restaurante.</p>
+
+<form asp-action="Login" method="post" novalidate>
+    <input type="hidden" asp-for="ReturnUrl" />
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alerta erro" role="alert">
+            <div asp-validation-summary="All"></div>
+        </div>
+    }
+
+    <div class="campo">
+        <label asp-for="Usuario"></label>
+        <input asp-for="Usuario" autocomplete="username" autofocus />
+        <span asp-validation-for="Usuario" class="erro-campo"></span>
+    </div>
+
+    <div class="campo">
+        <label asp-for="Senha"></label>
+        <input asp-for="Senha" autocomplete="current-password" />
+        <span asp-validation-for="Senha" class="erro-campo"></span>
+    </div>
+
+    <button type="submit">Entrar</button>
+</form>

@@ -1,0 +1,108 @@
+@{
+    var ctrl = ViewContext.RouteData.Values["controller"]?.ToString();
+    string? Atual(string c) => c == ctrl ? "page" : null;
+    var logado = User.Identity?.IsAuthenticated == true;
+}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - Florença Admin</title>
+    <style>
+        :root {
+            --vinho: #7a1f2b;
+            --vinho-escuro: #5a1520;
+            --creme: #faf6ef;
+            --texto: #1f1f1f;
+            --borda: #d9d2c5;
+            --ok: #1d6b34;
+            --erro: #a11d1d;
+            --aviso: #8a5a00;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: "Segoe UI", system-ui, Arial, sans-serif; background: var(--creme); color: var(--texto); line-height: 1.5; }
+        a { color: var(--vinho); }
+        .skip { position: absolute; left: -999px; top: 0; background: #fff; padding: .75rem 1rem; z-index: 10; }
+        .skip:focus { left: 0; }
+        header { background: var(--vinho); color: #fff; display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; padding: .75rem 1.5rem; }
+        header .marca { font-size: 1.25rem; font-weight: 700; margin-right: auto; }
+        header nav { display: flex; flex-wrap: wrap; gap: .25rem; }
+        header nav a { color: #fff; text-decoration: none; padding: .5rem .85rem; border-radius: 6px; }
+        header nav a:hover, header nav a[aria-current="page"] { background: var(--vinho-escuro); text-decoration: underline; }
+        header form { display: flex; align-items: center; gap: .75rem; }
+        main { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+        h1 { margin-top: 0; color: var(--vinho); }
+        h2 { color: var(--vinho-escuro); margin-top: 2rem; }
+        :focus-visible { outline: 3px solid #1a5fd0; outline-offset: 2px; }
+        .alerta { padding: .85rem 1rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid; font-weight: 600; }
+        .alerta.ok { background: #e6f4ea; border-color: var(--ok); color: var(--ok); }
+        .alerta.erro { background: #fdeaea; border-color: var(--erro); color: var(--erro); }
+        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+        .card { background: #fff; border: 1px solid var(--borda); border-radius: 10px; padding: 1rem 1.25rem; }
+        .card .num { font-size: 2.25rem; font-weight: 700; color: var(--vinho); display: block; }
+        .card a { font-weight: 600; }
+        table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--borda); }
+        th, td { text-align: left; padding: .6rem .75rem; border-bottom: 1px solid var(--borda); vertical-align: top; }
+        th { background: #f1ebe0; }
+        .tabela-rolavel { overflow-x: auto; }
+        .pedido { background: #fff; border: 1px solid var(--borda); border-left: 6px solid var(--vinho); border-radius: 8px; padding: .85rem 1rem; margin-bottom: .85rem; }
+        .pedido ul { margin: .4rem 0; padding-left: 1.25rem; }
+        .pedido header { all: unset; display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem; font-weight: 700; }
+        .acoes { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .5rem; }
+        .acoes form { margin: 0; }
+        button, .botao { font: inherit; cursor: pointer; border-radius: 6px; border: 2px solid var(--vinho); background: var(--vinho); color: #fff; padding: .5rem 1rem; text-decoration: none; display: inline-block; }
+        button:hover, .botao:hover { background: var(--vinho-escuro); }
+        button.secundario, .botao.secundario { background: #fff; color: var(--vinho); }
+        button.secundario:hover { background: #f4e8ea; }
+        header button { background: #fff; color: var(--vinho); border-color: #fff; }
+        label { display: block; font-weight: 600; margin-bottom: .25rem; }
+        input, select { font: inherit; padding: .5rem .65rem; border: 2px solid #777; border-radius: 6px; width: 100%; max-width: 380px; background: #fff; }
+        .campo { margin-bottom: 1rem; }
+        .linha-form { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
+        .selo { display: inline-block; padding: .1rem .55rem; border-radius: 999px; font-size: .85rem; font-weight: 700; border: 2px solid; background: #fff; }
+        .selo.pcd { color: #0b4a8f; border-color: #0b4a8f; }
+        .selo.ok { color: var(--ok); border-color: var(--ok); }
+        .selo.aviso { color: var(--aviso); border-color: var(--aviso); }
+        .selo.erro { color: var(--erro); border-color: var(--erro); }
+        .vazio { color: #555; font-style: italic; }
+        .erro-campo { color: var(--erro); font-weight: 600; }
+        footer { text-align: center; color: #555; padding: 2rem 1rem; font-size: .9rem; }
+    </style>
+</head>
+<body>
+    <a class="skip" href="#conteudo">Pular para o conteúdo principal</a>
+
+    <header>
+        <span class="marca">Restaurante Florença · Painel da Equipe</span>
+        @if (logado)
+        {
+            <nav aria-label="Navegação principal">
+                <a asp-controller="Home" asp-action="Index" aria-current="@Atual("Home")">Início</a>
+                <a asp-controller="Pedidos" asp-action="Index" aria-current="@Atual("Pedidos")">Cozinha</a>
+                <a asp-controller="Fila" asp-action="Index" aria-current="@Atual("Fila")">Fila</a>
+                <a asp-controller="Agendamentos" asp-action="Index" aria-current="@Atual("Agendamentos")">Reservas</a>
+                <a asp-controller="Cupons" asp-action="Index" aria-current="@Atual("Cupons")">Cupons</a>
+            </nav>
+            <form asp-controller="Account" asp-action="Logout" method="post">
+                <span>Olá, @User.Identity!.Name</span>
+                <button type="submit">Sair</button>
+            </form>
+        }
+    </header>
+
+    <main id="conteudo" tabindex="-1">
+        @if (TempData["Sucesso"] is string msgOk)
+        {
+            <div class="alerta ok" role="status">@msgOk</div>
+        }
+        @if (TempData["Erro"] is string msgErro)
+        {
+            <div class="alerta erro" role="alert">@msgErro</div>
+        }
+        @RenderBody()
+    </main>
+
+    <footer>PIM VII · Restaurante Florença · Plataforma web integrada ao aplicativo mobile</footer>
+</body>
+</html>

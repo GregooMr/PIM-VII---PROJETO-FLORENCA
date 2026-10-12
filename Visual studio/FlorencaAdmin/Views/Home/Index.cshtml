@@ -1,0 +1,39 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Início";
+}
+<h1>Visão geral</h1>
+<p>Resumo em tempo real da operação, com dados vindos da mesma API usada pelo aplicativo.</p>
+
+<section class="cards" aria-label="Indicadores">
+    <article class="card">
+        <span class="num">@Model.PedidosNovos</span>
+        Pedidos novos na cozinha
+        <div><a asp-controller="Pedidos" asp-action="Index">Abrir painel da cozinha</a></div>
+    </article>
+    <article class="card">
+        <span class="num">@Model.PedidosEmPreparo</span>
+        Pedidos em preparo
+        <div><a asp-controller="Pedidos" asp-action="Index">Ver pedidos</a></div>
+    </article>
+    <article class="card">
+        <span class="num">@Model.FilaAguardando</span>
+        Grupos aguardando na fila
+        <div><a asp-controller="Fila" asp-action="Index">Gerenciar fila</a></div>
+    </article>
+    <article class="card">
+        <span class="num">@Model.ReservasHoje</span>
+        Reservas confirmadas para hoje
+        <div><a asp-controller="Agendamentos" asp-action="Index">Ver reservas</a></div>
+    </article>
+    <article class="card">
+        <span class="num">@Model.ReservasPcdFuturas</span>
+        Reservas acessíveis (PCD) futuras
+        <div><a asp-controller="Agendamentos" asp-action="Index" asp-route-somentePcd="true">Preparar mesas acessíveis</a></div>
+    </article>
+    <article class="card">
+        <span class="num">@Model.CuponsDisponiveis</span>
+        Cupons ainda não utilizados
+        <div><a asp-controller="Cupons" asp-action="Index">Ir para o caixa</a></div>
+    </article>
+</section>

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'screens/login_screen.dart';
+import 'services/api_service.dart';
 
 /// ============================================================================
 /// PROJETO ACADÊMICO: Sistema de Gestão Gastronômica - Restaurante Florença
@@ -8,7 +9,26 @@ import 'screens/login_screen.dart';
 ///            (Vinho Bordô, Dourado, Oliva e Creme) e define a rota inicial.
 /// ============================================================================
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
+
 void main() {
+  ApiService.onUnauthorized = () async {
+    navigatorKey.currentState?.pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (_) => const LoginScreen(sessionExpired: true),
+      ),
+      (_) => false,
+    );
+  };
+  ApiService.onForbidden = () {
+    scaffoldMessengerKey.currentState?.showSnackBar(
+      const SnackBar(
+        content: Text('Você não tem permissão para esta ação.'),
+      ),
+    );
+  };
   runApp(const FlorencaApp());
 }
 
@@ -26,6 +46,8 @@ class FlorencaApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
+      scaffoldMessengerKey: scaffoldMessengerKey,
       title: 'Restaurante Florença',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(

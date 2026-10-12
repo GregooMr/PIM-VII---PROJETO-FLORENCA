@@ -10,6 +10,7 @@ import 'login_screen.dart';
 import 'perfil_screen.dart';
 import 'promocao_screen.dart';
 import 'sobre_screen.dart';
+import '../services/api_service.dart';
 
 class HomeClienteScreen extends StatelessWidget {
   const HomeClienteScreen({super.key});
@@ -28,8 +29,14 @@ class HomeClienteScreen extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () {
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
+            onPressed: () async {
+              await ApiService.logout();
+              if (!context.mounted) return;
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
+                (route) => false,
+              );
             },
           ),
         ],

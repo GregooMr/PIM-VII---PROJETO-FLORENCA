@@ -8,7 +8,9 @@ import 'home_cliente_screen.dart';
 import 'home_funcionario_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final bool sessionExpired;
+
+  const LoginScreen({super.key, this.sessionExpired = false});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -20,6 +22,14 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isFuncionario = false;
   bool _isLoading = false;
   String? _mensagemErro;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.sessionExpired) {
+      _mensagemErro = 'Sua sessão expirou. Entre novamente.';
+    }
+  }
 
   Future<void> _fazerLogin() async {
     final usuario = _usuarioController.text.trim();
@@ -41,6 +51,14 @@ class _LoginScreenState extends State<LoginScreen> {
       if (response.statusCode == 200) {
         final userData = jsonDecode(response.body);
         final String tipo = userData['tipoUsuario'] ?? 'CLIENTE';
+        final token = userData['token']?.toString().trim() ?? '';
+
+        if (token.isEmpty) {
+          setState(() {
+            _mensagemErro = 'Não foi possível iniciar a sessão. Tente novamente.';
+          });
+          return;
+        }
 
         if (_isFuncionario && tipo.toUpperCase() != 'FUNCIONARIO') {
           setState(() {
@@ -54,6 +72,8 @@ class _LoginScreenState extends State<LoginScreen> {
         await prefs.setInt('usuario_id', userData['id']);
         await prefs.setString('usuario_nome', userData['nome'] ?? '');
         await prefs.setString('usuario_tipo', tipo);
+        await prefs.setString('token', token);
+        ApiService.resetSessionExpiry();
 
         if (!mounted) return;
 
@@ -70,7 +90,12 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       } else {
         setState(() {
-          _mensagemErro = 'Usuário ou senha incorretos (HTTP ${response.statusCode})';
+          _mensagemErro = response.statusCode == 401
+              ? 'Usuário ou senha incorretos.'
+              : ApiService.errorMessage(
+                  response,
+                  fallback: 'Falha ao entrar.',
+                );
         });
       }
     } catch (e) {
@@ -100,7 +125,7 @@ class _LoginScreenState extends State<LoginScreen> {
           // Camada Escura Semi-Transparente (Overlay)
           Positioned.fill(
             child: Container(
-              color: Colors.black.withOpacity(0.55),
+              color: Colors.black.withValues(alpha: 0.55),
             ),
           ),
           // Conteúdo centralizado (Card de Login)
@@ -109,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
               padding: const EdgeInsets.all(24.0),
               child: Card(
                 elevation: 8,
-                color: Colors.white.withOpacity(0.95),
+                color: Colors.white.withValues(alpha: 0.95),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),

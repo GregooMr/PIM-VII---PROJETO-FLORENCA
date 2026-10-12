@@ -439,3 +439,6 @@ C:\Users\Admin\Documents\PIM VII - PROJETO FLORENCA\Visual studio\API\obj\Debug\
 C:\Users\Admin\Documents\PIM VII - PROJETO FLORENCA\Visual studio\API\obj\Debug\net8.0\FlorencaApi.pdb
 C:\Users\Admin\Documents\PIM VII - PROJETO FLORENCA\Visual studio\API\obj\Debug\net8.0\FlorencaApi.genruntimeconfig.cache
 C:\Users\Admin\Documents\PIM VII - PROJETO FLORENCA\Visual studio\API\obj\Debug\net8.0\ref\FlorencaApi.dll
+C:\Users\Admin\Documents\PIM VII - PROJETO FLORENCA\Visual studio\API\bin\Debug\net8.0\BCrypt.Net-Next.dll
+C:\Users\Admin\Documents\PIM VII - PROJETO FLORENCA\Visual studio\API\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+C:\Users\Admin\Documents\PIM VII - PROJETO FLORENCA\Visual studio\API\obj\Debug\net8.0\FlorencaApi.sourcelink.json

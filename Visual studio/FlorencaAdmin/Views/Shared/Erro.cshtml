@@ -1,0 +1,7 @@
+@model string
+@{
+    ViewData["Title"] = "Erro";
+}
+<h1>Algo deu errado</h1>
+<div class="alerta erro" role="alert">@Model</div>
+<p><a class="botao" asp-controller="Home" asp-action="Index">Tentar novamente</a></p>

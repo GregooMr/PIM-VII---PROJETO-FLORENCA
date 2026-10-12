@@ -1,11 +1,14 @@
 using FlorencaApi.Data;
 using FlorencaApi.Models;
+using FlorencaApi.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace FlorencaApi.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class AgendamentosController : ControllerBase
 {
@@ -16,7 +19,8 @@ public class AgendamentosController : ControllerBase
         _context = context;
     }
 
-    // GET: api/agendamentos
+    // GET: api/agendamentos  (somente FUNCIONARIO)
+    [Authorize(Roles = ClaimsExtensions.RoleFuncionario)]
     [HttpGet]
     public async Task<IActionResult> ObterTodos()
     {
@@ -32,6 +36,9 @@ public class AgendamentosController : ControllerBase
     [HttpGet("usuario/{usuarioId:int}")]
     public async Task<IActionResult> ObterPorUsuario(int usuarioId)
     {
+        if (!User.PodeAcessar(usuarioId))
+            return Forbid();
+
         var lista = await _context.Agendamentos
             .AsNoTracking()
             .Where(a => a.UsuarioId == usuarioId)
@@ -43,32 +50,42 @@ public class AgendamentosController : ControllerBase
 
     // POST: api/agendamentos
     [HttpPost]
-    public async Task<IActionResult> Criar([FromBody] Agendamento reserva)
+    public async Task<IActionResult> Criar([FromBody] AgendamentoRequest request)
     {
-        if (reserva.UsuarioId <= 0)
-            return BadRequest(new { mensagem = "Usuário inválido." });
+        // Cliente só reserva para si mesmo; funcionário pode reservar em nome de um cliente.
+        var usuarioId = User.EhFuncionario() && request.UsuarioId > 0
+            ? request.UsuarioId
+            : User.ObterUsuarioId();
 
-        if (reserva.DataHora <= DateTime.Now)
+        if (request.DataHora <= DateTime.Now)
             return BadRequest(new { mensagem = "A data da reserva deve ser futura." });
 
-        if (reserva.QtdPessoas <= 0)
+        if (request.QtdPessoas <= 0)
             return BadRequest(new { mensagem = "A quantidade de pessoas deve ser maior que zero." });
 
-        var usuarioExiste = await _context.Usuarios
-            .AnyAsync(u => u.Id == reserva.UsuarioId);
+        if (request.IsPcd && string.IsNullOrWhiteSpace(request.TipoPcd))
+            return BadRequest(new { mensagem = "Informe o tipo de necessidade para a reserva acessível." });
+
+        var usuarioExiste = await _context.Usuarios.AnyAsync(u => u.Id == usuarioId);
 
         if (!usuarioExiste)
             return NotFound(new { mensagem = "Usuário não encontrado." });
 
-        reserva.Status = "CONFIRMADO";
+        var reserva = new Agendamento
+        {
+            UsuarioId = usuarioId,
+            DataHora = request.DataHora,
+            QtdPessoas = request.QtdPessoas,
+            IsPcd = request.IsPcd,
+            NomePcd = request.IsPcd ? request.NomePcd : null,
+            TipoPcd = request.IsPcd ? request.TipoPcd : null,
+            Status = "CONFIRMADO"
+        };
 
         _context.Agendamentos.Add(reserva);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction(
-            nameof(ObterPorId),
-            new { id = reserva.Id },
-            reserva);
+        return CreatedAtAction(nameof(ObterPorId), new { id = reserva.Id }, reserva);
     }
 
     // GET: api/agendamentos/1
@@ -82,6 +99,9 @@ public class AgendamentosController : ControllerBase
         if (reserva == null)
             return NotFound(new { mensagem = "Agendamento não encontrado." });
 
+        if (!User.PodeAcessar(reserva.UsuarioId))
+            return Forbid();
+
         return Ok(reserva);
     }
 
@@ -93,6 +113,9 @@ public class AgendamentosController : ControllerBase
 
         if (reserva == null)
             return NotFound(new { mensagem = "Agendamento não encontrado." });
+
+        if (!User.PodeAcessar(reserva.UsuarioId))
+            return Forbid();
 
         if (reserva.Status == "CONCLUIDO")
             return BadRequest(new { mensagem = "Não é possível cancelar uma reserva concluída." });
