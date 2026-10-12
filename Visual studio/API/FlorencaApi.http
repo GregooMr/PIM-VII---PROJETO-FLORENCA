@@ -1,0 +1,6 @@
+@FlorencaApi_HostAddress = http://localhost:5162
+
+GET {{FlorencaApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
