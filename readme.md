@@ -1,7 +1,7 @@
 # 🇮🇹 Restaurante Florença — Ecossistema Tecnológico Integrado
 > **Projeto Integrado Multidisciplinar VII (PIM VII)**  
 > **Curso Superior de Tecnologia em Análise e Desenvolvimento de Sistemas — UNIP**  
-> **Integrantes:** Leonardo Rodrigues Santana | Gabriel Olímpio dos Santos (RA: 2545535)  
+> **Integrantes:** Leonardo Rodrigues Sant' Ana (RA: 2634490)| Gabriel Olímpio dos Santos (RA: 2545535)  
 > **Orientador:** Prof. MSc. Tarcísio Peres  
 
 ---
@@ -34,32 +34,6 @@ O ecossistema é composto por:
 * **Gerenciamento de Estado:** `StatefulWidget` com reatividade local
 * **Armazenamento Local:** `SharedPreferences` (Offline-first / Carrinho e Sessão)
 * **Comunicação HTTP:** Biblioteca `http` assíncrona consumindo a API REST
-
----
-
-## 🏢 Arquitetura do Sistema
-
-```
-                      +------------------------------------------+
-                      |         Aplicativo Mobile Flutter        |
-                      |    (Perfis: Cliente e Equipe Staff)     |
-                      +--------------------+---------------------+
-                                           |
-                                           | HTTP / REST (JSON + JWT)
-                                           v
-+-----------------------+     +----------------------------------+
-| Painel Web MVC Admin  |---->| API REST ASP.NET Core (.NET 8)   |
-| (KDS / Recepção / Ca) |     |  - Autenticação & Segurança JWT |
-+-----------------------+     |  - Regras de Negócio e Validação |
-                              +----------------+-----------------+
-                                               |
-                                               | Entity Framework Core
-                                               v
-                              +----------------------------------+
-                              |      Banco de Dados SQL Server   |
-                              |      (DB: restauranteflorenca)   |
-                              +----------------------------------+
-```
 
 ---
 
@@ -173,24 +147,9 @@ O ecossistema é composto por:
 
 | Perfil | Usuário / Login | Senha | Acesso Liberado |
 | :--- | :--- | :--- | :--- |
-| **Cliente** | `cliente_teste` | `123456` | App Mobile (Cardápio, Reservas, Carrinho) |
-| **Funcionário / Staff** | `admin_florenca` | `admin123` | App Mobile (Área Staff) & Painel Web (KDS/Gestão) |
+| **Cliente** | `cliente1` | `1234` | App Mobile (Cardápio, Reservas, Carrinho) |
+| **Funcionário / Staff** | `admin` | `admin` | App Mobile (Área Staff) & Painel Web (KDS/Gestão) |
 
----
-
-## 📊 Estrutura de Diretórios (Mobile)
-
-```
-RestauranteFlorenca_Flutter/
-├── assets/
-│   └── images/              # Imagens e identidade visual do restaurante
-├── lib/
-│   ├── main.dart            # Ponto de entrada da aplicação e rotas
-│   ├── models/              # Classes de entidade (Usuario, Agendamento, Comanda, etc.)
-│   ├── services/            # Cliente HTTP RESTful (api_service.dart)
-│   └── screens/             # Telas do Cliente e da Equipe Staff
-└── pubspec.yaml             # Gerenciador de dependências e assets
-```
 
 ---
 
